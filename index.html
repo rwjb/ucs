@@ -1,0 +1,198 @@
+<html>
+<head>
+<title>Exalted v.Dif</title>
+<script type="text/javascript" src="random.js"></script>
+<link type="text/css" rel="stylesheet" href="style.css"></script>
+</head>
+<body>
+
+<h1>Exalted v.Dif</h1>
+
+<h2>The Attack</h2>
+	<table>
+		<tr>
+			<td><label for="atk_in">Attack Pool:</label></td>
+			<td><input type="number" id="atk_in" min=1 max=99 value=10 /></td>
+			<td><label for="atk_tn">TN:</label></td>
+			<td><input type="number" id="atk_tn" min=1 max=10 value=7  /></td>
+			<td>
+				<label for="atk_exp">Exploding:</label><input type="checkbox" id="atk_exp" name="atk_exp" value="atk_exp" checked/>
+			</td>
+		</tr>
+		<tr>
+			<td><label for="str">Damage Modifier:</label></td>
+			<td><input type="number" id="str"    min=0 max=99 value=5 /></td>
+			<td><label for="dmg_tn">TN:</label></td>
+			<td><input type="number" id="dmg_tn" min=1 max=10 value=7  /></td>
+			<td>
+				<label for="dmg_exp">Exploding:</label><input type="checkbox" id="dmg_exp" name="dmg_exp" value="dmg_exp"/>
+			</td>
+		</tr>
+	</table>
+<h3>The Weapon</h3>
+	<table>
+		<tr>
+			<td><label for="res">Resources</label></td>
+			<td><label for="spd">Speed</label></td>
+			<td><label for="impact">Impact</label></td>
+		</tr>
+		<tr>
+			<td><input type="number" id="res"    min=0 max=99 value=3 /></td>
+			<td><input type="number" id="spd"    min=0 max=99 value=3 /></td>
+			<td><input type="number" id="impact" min=0 max=99 value=3 /></td>
+		</tr>
+	</table>
+	<label for="atk_grade">Type</label>
+	<select name="atk_grade" id="atk_grade">
+		<option value=1>1: Graze</option>
+		<option value=2>2: Hurt</option>
+		<option value=3>3: Wound</option>
+		<option value=4>4: Cripple</option>
+		<option value=5>5: Incapacitate</option>
+	</select>
+	<br/>
+	[<label for="piercing">Piercing:</label><input type="checkbox" id="piercing" name="piercing" value="piercing"/>]
+	[<label for="breaker">Breaker:</label>  <input type="checkbox" id="breaker" name="breaker" value="breaker"/>]
+	[<label for="keen">Keen:</label>        <input type="checkbox" id="keen" name="keen" value="keen"/>]
+	[<label for="acc">Accuracy:</label>     <input type="checkbox" id="acc" name="acc" value="acc"/>]
+	<br/>
+<h2>The Defense</h2>
+	<table>
+		<tr>
+			<td><label for="def">Defense</label></td>
+			<td><label for="soak">Soak</label></td>
+			<td><label for="hard">Hard</label></td>
+		</tr>
+		<tr>
+			<td><input type="number" id="def"  min=0 max=99 value=3 /></td>
+			<td><input type="number" id="soak" min=0 max=99 value=3 /></td>
+			<td><input type="number" id="hard" min=0 max=99 value=3 /></td>
+		</tr>
+	</table>
+<h3>The Health Track</h3>
+	<table>
+		<tr>
+			<td><label for="hp_g1">Grazed</label></td>
+			<td><label for="hp_g2">Hurt</label></td>
+			<td><label for="hp_g3">Wounded</label></td>
+			<td><label for="hp_g4">Crippled</label></td>
+			<td><label for="hp_g5">Incap</label></td>
+		</tr>
+		<tr>
+			<td><input type="number" id="hp_g1" min=0 max=99 value=4 /></td>
+			<td><input type="number" id="hp_g2" min=0 max=99 value=2 /></td>
+			<td><input type="number" id="hp_g3" min=0 max=99 value=2 /></td>
+			<td><input type="number" id="hp_g4" min=0 max=99 value=1 /></td>
+			<td><input type="number" id="hp_g5" min=0 max=99 value=1 /></td>
+		</tr>
+	</table>
+<button onclick="run()">Run</button>
+<hr/>
+<h2>Results</h2>
+	<table id="out">
+	</table>
+<p id="dice"/>
+<p id="suxx"/>
+
+<script>
+function run()
+{
+	// ATTACK
+	{
+		var atk_in = document.getElementById("atk_in").value
+		var atk_tn = document.getElementById("atk_tn").value
+		var atk_exp = document.getElementById("atk_exp").checked
+		var str = document.getElementById("str").value
+		var dmg_tn = document.getElementById("dmg_tn").value
+		var dmg_exp = document.getElementById("dmg_exp").checked
+		var res = document.getElementById("res").value
+		var spd = document.getElementById("spd").value
+		var impact = document.getElementById("impact").value
+		var atk_grade = document.getElementById("atk_grade").value
+		var b_piercing = document.getElementById("piercing").checked
+		var b_breaker = document.getElementById("breaker").checked
+		var b_keen = document.getElementById("keen").checked
+		var b_acc = document.getElementById("acc").checked
+	}
+	// DEFENSE
+	{
+		var def = document.getElementById("def").value
+		var soak = document.getElementById("soak").value
+		var hard = document.getElementById("hard").value
+		var hls = new Array(5)
+		for (let i=0; i<5; i++) {
+			hls[i] = document.getElementById("hp_g"+(i+1)).value
+		}
+	}
+
+	var out = document.getElementById("out")
+	out.innerHTML = ""
+
+	// HIT
+	{
+		let f_atk_in = atk_in
+		if (b_acc) f_atk_in += res
+		var atk_range = (atk_exp?2:1) * f_atk_in + 1
+		var atk_probs = Array(atk_range)
+		var atk_expected = 0
+		for (let i=0; i<atk_range; i++) {
+			atk_probs[i] = prob_suxx_on_ndice(i,atk_in,atk_tn,atk_exp)
+			atk_expected += atk_probs[i]*i
+		}
+
+		var p_atk_miss = 0
+		var p_atk_hit = 0
+		for (let i=0; i<atk_range; i++) {
+			if (i <= def) p_atk_miss += atk_probs[i]
+			else          p_atk_hit  += atk_probs[i]
+		}
+	}
+	out.innerHTML += format_pair_as_row("P(attack) = 1",p_atk_miss+p_atk_hit)
+	out.innerHTML += format_pair_as_row("E(attack)",atk_expected)
+	out.innerHTML += format_pair_as_row("P(a_miss := attack <= DV)",p_atk_miss)
+	out.innerHTML += format_pair_as_row("P(a_hit  := DV  < attack)",p_atk_hit)
+
+	// DAMAGE
+	{
+		let max_momentum = (atk_range-1) - def
+		let f_max_dmg_pool = max_momentum + str + impact
+		if (b_keen) f_max_dmg_pool += res
+		var dmg_range = (dmg_exp?2:1) * (f_max_dmg_pool) + 1
+		var dmg_probs = Array(dmg_range).fill(0)
+		var dmg_expected = 0
+		for (let i=0; i<atk_range; i++) {
+			let roll_max = (dmg_exp?2:1) * i + 1
+			for (let j=0; j<roll_max; j++) {
+				dmg_probs[j] += prob_suxx_on_ndice(j,i,dmg_tn,dmg_exp) * atk_probs[i]
+			}
+		}
+
+		let f_soak = soak
+		if (b_piercing) soak -= res
+
+		var p_dmg_miss = 0
+		var p_dmg_hit  = 0
+		for (let i=0; i<dmg_range; i++) {
+			if (i <= soak) p_dmg_miss += dmg_probs[i]
+			else           p_dmg_hit  += dmg_probs[i]
+		}
+
+		var p_dmg_miss_mercy = p_dmg_miss * ((dmg_tn-1)/10)
+		var p_dmg_hit_mercy = p_dmg_hit + p_dmg_miss * (10-dmg_tn+1)/10
+	}
+	out.innerHTML += format_pair_as_row("P(damage | a_hit) = 1",p_dmg_miss+p_dmg_hit)
+	out.innerHTML += format_pair_as_row("P(d_miss_raw := damage <= soak | a_hit)",p_dmg_miss)
+	out.innerHTML += format_pair_as_row("P(d_hit_raw := soak < damage | a_hit)",p_dmg_hit)
+	out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ mercy_miss | a_hit)",p_dmg_miss_mercy)
+	out.innerHTML += format_pair_as_row("P(d_hit := d_hit_raw \\/ d_miss_raw /\\ mercy_hit | a_hit)",p_dmg_hit_mercy)
+
+	// HITS
+	{
+		let f_hard = hard
+		if (b_breaker) f_hard = 0
+	}
+}
+</script>
+
+</body>
+</html>
