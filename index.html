@@ -16,7 +16,7 @@
 			<td><label for="atk_tn">TN:</label></td>
 			<td><input type="number" id="atk_tn" min=1 max=10 value=7  /></td>
 			<td>
-				<label for="atk_exp">Exploding:</label><input type="checkbox" id="atk_exp" name="atk_exp" value="atk_exp" checked/>
+				<label for="atk_exp">Double 10s:</label><input type="checkbox" id="atk_exp" name="atk_exp" value="atk_exp" checked/>
 			</td>
 		</tr>
 		<tr>
@@ -25,7 +25,7 @@
 			<td><label for="dmg_tn">TN:</label></td>
 			<td><input type="number" id="dmg_tn" min=1 max=10 value=7  /></td>
 			<td>
-				<label for="dmg_exp">Exploding:</label><input type="checkbox" id="dmg_exp" name="dmg_exp" value="dmg_exp"/>
+				<label for="dmg_exp">Double 10s:</label><input type="checkbox" id="dmg_exp" name="dmg_exp" value="dmg_exp"/>
 			</td>
 		</tr>
 	</table>
@@ -179,17 +179,39 @@ function run()
 
 		var p_dmg_miss_mercy = p_dmg_miss * ((dmg_tn-1)/10)
 		var p_dmg_hit_mercy = p_dmg_hit + p_dmg_miss * (10-dmg_tn+1)/10
+		var p_success = p_dmg_hit_mercy * p_atk_hit
 	}
 	out.innerHTML += format_pair_as_row("P(damage | a_hit) = 1",p_dmg_miss+p_dmg_hit)
 	out.innerHTML += format_pair_as_row("P(d_miss_raw := damage <= soak | a_hit)",p_dmg_miss)
 	out.innerHTML += format_pair_as_row("P(d_hit_raw := soak < damage | a_hit)",p_dmg_hit)
 	out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ mercy_miss | a_hit)",p_dmg_miss_mercy)
 	out.innerHTML += format_pair_as_row("P(d_hit := d_hit_raw \\/ d_miss_raw /\\ mercy_hit | a_hit)",p_dmg_hit_mercy)
+	out.innerHTML += format_pair_as_row("P(success := (d_hit_raw \\/ d_miss_raw /\\ mercy_hit) /\\ a_hit)",p_success)
 
 	// HITS
 	{
-		let f_hard = hard
+		let f_hard = Number(hard)
 		if (b_breaker) f_hard = 0
+
+		var f_hls = f_hard
+		if (1 < atk_grade) f_hls += 1
+		for (let i=0; i<5; i++) {
+			if (i+1 < atk_grade) continue
+			f_hls += Number(hls[i])
+		}
+	}
+	out.innerHTML += format_pair_as_row("Effective HLs",f_hls)
+
+	// ATTACKS TO KILL
+	{
+		let cum_prob = 0
+		let i = f_hls
+		while(cum_prob <= 0.95) {
+			cum_prob += fact(i-1)/fact(f_hls-1)/fact(i-f_hls)*(p_success**f_hls)*((1-p_success)**(i-f_hls))
+			let name = "P(dead on atk " + (i).toString() + " @ tick " + (i*spd).toString() + ")"
+			out.innerHTML += format_pair_as_row(name,cum_prob)
+			i += 1
+		}
 	}
 }
 </script>

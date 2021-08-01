@@ -28,12 +28,10 @@ function fact(n) {
 function prob_suxx_on_ndice(suxx,dice,tn,explode) {
 	function gen_configs(suxx, dice) {
 		let ret = [];
-		for (let explode=0; explode<suxx/2+1; explode++)
-		{
+		for (let explode=0; explode<suxx/2+1; explode++) {
 			let hit = suxx - explode*2;
 			let miss = dice - explode - hit;
-			if (0 <= hit && 0 <= miss)
-			{
+			if (0 <= hit && 0 <= miss) {
 				ret.push([miss,hit,explode]);
 			}
 		}
