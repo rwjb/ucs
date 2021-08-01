@@ -194,13 +194,17 @@ function run()
 		if (b_breaker) f_hard = 0
 
 		var f_hls = f_hard
-		if (1 < atk_grade) f_hls += 1
+		let collapsed_hls = 0
 		for (let i=0; i<5; i++) {
-			if (i+1 < atk_grade) continue
-			f_hls += Number(hls[i])
+			if (atk_grade-1 <= i) {
+				f_hls += Number(hls[i])
+			} else if (0 < hls[i]) {
+				collapsed_hls = 1
+			}
 		}
+		f_hls += collapsed_hls
 	}
-	out.innerHTML += format_pair_as_row("Effective HLs",f_hls)
+	out.innerHTML += format_pair_as_row("Full Hits to Kill",f_hls)
 
 	// ATTACKS TO KILL
 	{
