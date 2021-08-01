@@ -20,7 +20,7 @@
 			</td>
 		</tr>
 		<tr>
-			<td><label for="str">Damage Modifier:</label></td>
+			<td><label for="str">Strength:</label></td>
 			<td><input type="number" id="str"    min=0 max=99 value=5 /></td>
 			<td><label for="dmg_tn">TN:</label></td>
 			<td><input type="number" id="dmg_tn" min=1 max=10 value=7  /></td>
@@ -147,10 +147,10 @@ function run()
 			else          p_atk_hit  += atk_probs[i]
 		}
 	}
-	out.innerHTML += format_pair_as_row("P(attack) = 1",p_atk_miss+p_atk_hit)
+	// out.innerHTML += format_pair_as_row("P(attack) = 1",p_atk_miss+p_atk_hit)
 	out.innerHTML += format_pair_as_row("E(attack)",atk_expected)
-	out.innerHTML += format_pair_as_row("P(a_miss := attack <= DV)",p_atk_miss)
-	out.innerHTML += format_pair_as_row("P(a_hit  := DV  < attack)",p_atk_hit)
+	// out.innerHTML += format_pair_as_row("P(a_miss := attack <= DV)",p_atk_miss)
+	out.innerHTML += format_pair_as_row("P(blow  := DV  < attack)",p_atk_hit)
 
 	// DAMAGE
 	{
@@ -178,12 +178,12 @@ function run()
 		var p_dmg_hit_ping = p_dmg_hit + p_dmg_miss * (10-dmg_tn+1)/10
 		var p_success = p_dmg_hit_ping * p_atk_hit
 	}
-	out.innerHTML += format_pair_as_row("P(damage | a_hit) = 1",p_dmg_miss+p_dmg_hit)
-	out.innerHTML += format_pair_as_row("P(d_miss_raw := damage <= soak | a_hit)",p_dmg_miss)
-	out.innerHTML += format_pair_as_row("P(d_hit_raw := soak < damage | a_hit)",p_dmg_hit)
-	out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ ping_miss | a_hit)",p_dmg_miss_ping)
-	out.innerHTML += format_pair_as_row("P(d_hit := d_hit_raw \\/ d_miss_raw /\\ ping_hit | a_hit)",p_dmg_hit_ping)
-	out.innerHTML += format_pair_as_row("P(success := a_hit /\\ (d_hit_raw \\/ d_miss_raw /\\ ping_hit))",p_success)
+	// out.innerHTML += format_pair_as_row("P(damage | blow) = 1",p_dmg_miss+p_dmg_hit)
+	// out.innerHTML += format_pair_as_row("P(d_miss_raw := damage <= soak | blow)",p_dmg_miss)
+	out.innerHTML += format_pair_as_row("P(d_hit_pre_ping := soak < damage | blow)",p_dmg_hit)
+	// out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ ping_miss | blow)",p_dmg_miss_ping)
+	out.innerHTML += format_pair_as_row("P(d_hit_post_ping := d_hit_raw \\/ d_miss_raw /\\ ping_hit | blow)",p_dmg_hit_ping)
+	out.innerHTML += format_pair_as_row("P(strike := blow /\\ (d_hit_raw \\/ d_miss_raw /\\ ping_hit))",p_success)
 
 	// HITS
 	{
@@ -202,7 +202,7 @@ function run()
 		f_hls += collapsed_hls
 	}
 	out.innerHTML += format_pair_as_row("Full Hits to Kill",f_hls)
-	out.innerHTML += format_pair_as_row("Expected/Average # Attacks to Kill",Math.ceil(f_hls/p_success))
+	out.innerHTML += format_pair_as_row("Expected/Average # Attacks to Kill",(f_hls/p_success))
 
 	// ATTACKS TO KILL
 	{
