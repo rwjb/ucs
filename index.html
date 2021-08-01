@@ -99,16 +99,16 @@ function run()
 {
 	// ATTACK
 	{
-		var atk_in = document.getElementById("atk_in").value
-		var atk_tn = document.getElementById("atk_tn").value
+		var atk_in = Number(document.getElementById("atk_in").value)
+		var atk_tn = Number(document.getElementById("atk_tn").value)
 		var atk_exp = document.getElementById("atk_exp").checked
-		var str = document.getElementById("str").value
-		var dmg_tn = document.getElementById("dmg_tn").value
+		var str = Number(document.getElementById("str").value)
+		var dmg_tn = Number(document.getElementById("dmg_tn").value)
 		var dmg_exp = document.getElementById("dmg_exp").checked
-		var res = document.getElementById("res").value
-		var spd = document.getElementById("spd").value
-		var impact = document.getElementById("impact").value
-		var atk_grade = document.getElementById("atk_grade").value
+		var res = Number(document.getElementById("res").value)
+		var spd = Number(document.getElementById("spd").value)
+		var impact = Number(document.getElementById("impact").value)
+		var atk_grade = Number(document.getElementById("atk_grade").value)
 		var b_piercing = document.getElementById("piercing").checked
 		var b_breaker = document.getElementById("breaker").checked
 		var b_keen = document.getElementById("keen").checked
@@ -116,12 +116,12 @@ function run()
 	}
 	// DEFENSE
 	{
-		var def = document.getElementById("def").value
-		var soak = document.getElementById("soak").value
-		var hard = document.getElementById("hard").value
+		var def = Number(document.getElementById("def").value)
+		var soak = Number(document.getElementById("soak").value)
+		var hard = Number(document.getElementById("hard").value)
 		var hls = new Array(5)
 		for (let i=0; i<5; i++) {
-			hls[i] = document.getElementById("hp_g"+(i+1)).value
+			hls[i] = Number(document.getElementById("hp_g"+(i+1)).value)
 		}
 	}
 
@@ -155,38 +155,36 @@ function run()
 	// DAMAGE
 	{
 		let max_momentum = (atk_range-1) - def
-		let f_max_dmg_pool = max_momentum + str + impact
-		if (b_keen) f_max_dmg_pool += res
+		let f_max_dmg_pool = max_momentum + str + impact + (b_keen?res:0)
 		var dmg_range = (dmg_exp?2:1) * (f_max_dmg_pool) + 1
 		var dmg_probs = Array(dmg_range).fill(0)
 		var dmg_expected = 0
-		for (let i=0; i<atk_range; i++) {
-			let roll_max = (dmg_exp?2:1) * i + 1
-			for (let j=0; j<roll_max; j++) {
-				dmg_probs[j] += prob_suxx_on_ndice(j,i,dmg_tn,dmg_exp) * atk_probs[i]
+		for (let i=(def+1); i<atk_range; i++) {
+			let roll_max = (dmg_exp?2:1) * (i - def + str + impact + (b_keen?res:0))
+			for (let j=0; j<=roll_max; j++) {
+				dmg_probs[j] += prob_suxx_on_ndice(j,i,dmg_tn,dmg_exp) * atk_probs[i] / p_atk_hit
 			}
 		}
 
-		let f_soak = soak
-		if (b_piercing) soak -= res
+		let f_soak = soak - (b_piercing?soak:0)
 
 		var p_dmg_miss = 0
 		var p_dmg_hit  = 0
 		for (let i=0; i<dmg_range; i++) {
-			if (i <= soak) p_dmg_miss += dmg_probs[i]
-			else           p_dmg_hit  += dmg_probs[i]
+			if (i <= f_soak) p_dmg_miss += dmg_probs[i]
+			else             p_dmg_hit  += dmg_probs[i]
 		}
 
-		var p_dmg_miss_mercy = p_dmg_miss * ((dmg_tn-1)/10)
-		var p_dmg_hit_mercy = p_dmg_hit + p_dmg_miss * (10-dmg_tn+1)/10
-		var p_success = p_dmg_hit_mercy * p_atk_hit
+		var p_dmg_miss_ping = p_dmg_miss * ((dmg_tn-1)/10)
+		var p_dmg_hit_ping = p_dmg_hit + p_dmg_miss * (10-dmg_tn+1)/10
+		var p_success = p_dmg_hit_ping * p_atk_hit
 	}
 	out.innerHTML += format_pair_as_row("P(damage | a_hit) = 1",p_dmg_miss+p_dmg_hit)
 	out.innerHTML += format_pair_as_row("P(d_miss_raw := damage <= soak | a_hit)",p_dmg_miss)
 	out.innerHTML += format_pair_as_row("P(d_hit_raw := soak < damage | a_hit)",p_dmg_hit)
-	out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ mercy_miss | a_hit)",p_dmg_miss_mercy)
-	out.innerHTML += format_pair_as_row("P(d_hit := d_hit_raw \\/ d_miss_raw /\\ mercy_hit | a_hit)",p_dmg_hit_mercy)
-	out.innerHTML += format_pair_as_row("P(success := (d_hit_raw \\/ d_miss_raw /\\ mercy_hit) /\\ a_hit)",p_success)
+	out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ ping_miss | a_hit)",p_dmg_miss_ping)
+	out.innerHTML += format_pair_as_row("P(d_hit := d_hit_raw \\/ d_miss_raw /\\ ping_hit | a_hit)",p_dmg_hit_ping)
+	out.innerHTML += format_pair_as_row("P(success := a_hit /\\ (d_hit_raw \\/ d_miss_raw /\\ ping_hit))",p_success)
 
 	// HITS
 	{
@@ -205,16 +203,20 @@ function run()
 		f_hls += collapsed_hls
 	}
 	out.innerHTML += format_pair_as_row("Full Hits to Kill",f_hls)
+	out.innerHTML += format_pair_as_row("Expected/Average # Attacks to Kill",Math.ceil(f_hls/p_success))
 
 	// ATTACKS TO KILL
 	{
 		let cum_prob = 0
-		let i = f_hls
+		let len = f_hls
+		let trgt_suxx = f_hls
 		while(cum_prob <= 0.95) {
-			cum_prob += fact(i-1)/fact(f_hls-1)/fact(i-f_hls)*(p_success**f_hls)*((1-p_success)**(i-f_hls))
-			let name = "P(dead on atk " + (i).toString() + " @ tick " + (i*spd).toString() + ")"
+			let s_comb = fact(len-1)/fact(trgt_suxx-1)/fact(len-trgt_suxx)
+			let s_prob = (p_success**trgt_suxx) * ((1-p_success)**(len-trgt_suxx))
+			cum_prob += s_comb*s_prob
+			let name = "P(dead on atk " + (len).toString() + " @ tick " + (len*spd).toString() + ")"
 			out.innerHTML += format_pair_as_row(name,cum_prob)
-			i += 1
+			len += 1
 		}
 	}
 }
