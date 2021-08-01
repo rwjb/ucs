@@ -154,15 +154,14 @@ function run()
 
 	// DAMAGE
 	{
-		let max_momentum = (atk_range-1) - def
-		let f_max_dmg_pool = max_momentum + str + impact + (b_keen?res:0)
+		let f_max_dmg_pool = (atk_range-1) - def + str + impact + (b_keen?res:0)
 		var dmg_range = (dmg_exp?2:1) * (f_max_dmg_pool) + 1
 		var dmg_probs = Array(dmg_range).fill(0)
-		var dmg_expected = 0
 		for (let i=(def+1); i<atk_range; i++) {
-			let roll_max = (dmg_exp?2:1) * (i - def + str + impact + (b_keen?res:0))
+			let dice = (i - def + str + impact + (b_keen?res:0))
+			let roll_max = (dmg_exp?2:1) * dice
 			for (let j=0; j<=roll_max; j++) {
-				dmg_probs[j] += prob_suxx_on_ndice(j,i,dmg_tn,dmg_exp) * atk_probs[i] / p_atk_hit
+				dmg_probs[j] += prob_suxx_on_ndice(j,dice,dmg_tn,dmg_exp) * atk_probs[i] / p_atk_hit
 			}
 		}
 
