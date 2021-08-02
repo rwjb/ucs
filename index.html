@@ -182,7 +182,7 @@ function run()
 	// out.innerHTML += format_pair_as_row("P(d_miss_raw := damage <= soak | blow)",p_dmg_miss)
 	out.innerHTML += format_pair_as_row("P(d_hit_pre_ping := soak < damage | blow)",p_dmg_hit)
 	// out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ ping_miss | blow)",p_dmg_miss_ping)
-	out.innerHTML += format_pair_as_row("P(d_hit_post_ping := d_hit_raw \\/ d_miss_raw /\\ ping_hit | blow)",p_dmg_hit_ping)
+	out.innerHTML += format_pair_as_row("P(d_hit_post_ping := d_hit_pre_ping \\/ d_miss_pre_ping /\\ ping_hit | blow)",p_dmg_hit_ping)
 	out.innerHTML += format_pair_as_row("P(strike := blow /\\ d_hit_post_ping",p_success)
 
 	// HITS
