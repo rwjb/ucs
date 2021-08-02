@@ -136,7 +136,7 @@ function run()
 		var atk_probs = Array(atk_range)
 		var atk_expected = 0
 		for (let i=0; i<atk_range; i++) {
-			atk_probs[i] = prob_suxx_on_ndice(i,atk_in,atk_tn,atk_exp)
+			atk_probs[i] = prob_suxx_on_ndice(i,f_atk_in,atk_tn,atk_exp)
 			atk_expected += atk_probs[i]*i
 		}
 
@@ -157,11 +157,11 @@ function run()
 		let f_max_dmg_pool = (atk_range-1) - def + str + impact + (b_keen?res:0)
 		var dmg_range = (dmg_exp?2:1) * (f_max_dmg_pool) + 1
 		var dmg_probs = Array(dmg_range).fill(0)
-		for (let i=(def+1); i<atk_range; i++) {
-			let dice = (i - def + str + impact + (b_keen?res:0))
+		for (let atk_s=(def+1); atk_s<atk_range; atk_s++) {
+			let dice = (atk_s - def + str + impact + (b_keen?res:0))
 			let roll_max = (dmg_exp?2:1) * dice
-			for (let j=0; j<=roll_max; j++) {
-				dmg_probs[j] += prob_suxx_on_ndice(j,dice,dmg_tn,dmg_exp) * atk_probs[i] / p_atk_hit
+			for (let suxx=0; suxx<=roll_max; suxx++) {
+				dmg_probs[suxx] += prob_suxx_on_ndice(suxx,dice,dmg_tn,dmg_exp) * atk_probs[atk_s] / p_atk_hit
 			}
 		}
 
@@ -183,7 +183,7 @@ function run()
 	out.innerHTML += format_pair_as_row("P(d_hit_pre_ping := soak < damage | blow)",p_dmg_hit)
 	// out.innerHTML += format_pair_as_row("P(d_miss := d_miss_raw /\\ ping_miss | blow)",p_dmg_miss_ping)
 	out.innerHTML += format_pair_as_row("P(d_hit_post_ping := d_hit_raw \\/ d_miss_raw /\\ ping_hit | blow)",p_dmg_hit_ping)
-	out.innerHTML += format_pair_as_row("P(strike := blow /\\ (d_hit_raw \\/ d_miss_raw /\\ ping_hit))",p_success)
+	out.innerHTML += format_pair_as_row("P(strike := blow /\\ d_hit_post_ping",p_success)
 
 	// HITS
 	{
