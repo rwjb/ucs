@@ -1,10 +1,15 @@
 function format_pair_as_row(left,right) {
+	return format_list_as_row([left,right])
+}
+function format_list_as_row(lst){
 	var html = ""
-	html += "<tr><td>"
-	html += left
-	html += "</td><td>"
-	html += right
-	html += "</td></tr>"
+	html += "<tr>"
+	for (l of lst) {
+		html += "<td>"
+		html += l
+		html += "</td>"
+	}
+	html += "</tr>"
 	return html
 }
 function get_Nd10(n) {
